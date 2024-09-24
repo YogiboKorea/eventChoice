@@ -5,7 +5,7 @@ const MongoClient = require('mongodb').MongoClient;
 require('dotenv').config();  // .env 파일 불러오기
 
 app.use(bodyParser.json());
-const PORT = 4001;
+const PORT = 4000;
 const mongoUri = process.env.MONGODB_URI;  // .env 파일의 MONGODB_URI 사용
 
 /// MongoDB 연결
