@@ -1,9 +1,9 @@
 {
   "name": "web.js",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "web.js",
   "scripts": {
-    "start": "node web.js"
+    "start": "nodemon web.js"
   },
   "author": "",
   "license": "ISC",
@@ -12,8 +12,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
-    "mogodb": "^0.0.1-security",
-    "mongodb": "^6.9.0",
+    "mongodb": "^6.9.0", 
     "nodemon": "^3.1.7"
   }
 }
