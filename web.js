@@ -32,7 +32,7 @@ async function connectToDatabase() {
 
 // API 라우트 설정
 app.post('/api/sendMemberData', async (req, res) => {
-    const { member_id } = req.body;
+    const { member_id, phone, name } = req.body;  // member_id, phone, name을 받음
 
     try {
         const db = await connectToDatabase();
@@ -42,12 +42,11 @@ app.post('/api/sendMemberData', async (req, res) => {
         const existingMember = await collection.findOne({ member_id });
 
         if (existingMember) {
-            // 중복된 경우 데이터 저장을 막고 에러 메시지 반환
-            return res.status(400).json({ message: '이미 참여한 이벤트입니다.' });
+            return res.status(400).json({ message: '이미 참여한 회원입니다.' });
         }
 
-        // 새 회원 정보 저장
-        await collection.insertOne({ member_id });
+        // 새 회원 정보 저장 (member_id, phone, name)
+        await collection.insertOne({ member_id, phone, name });
         res.status(200).json({ message: '회원 정보가 성공적으로 저장되었습니다.' });
     } catch (error) {
         console.error('저장 중 오류 발생:', error);
