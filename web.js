@@ -30,18 +30,10 @@ async function connectToDatabase() {
     }
 }
 
-// 한국 시간(KST)을 가져오는 함수
-function getKoreanTime() {
-    const now = new Date();
-    const utcOffset = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const koreanTime = new Date(utcOffset + (9 * 60 * 60000));  // UTC+9 시간 추가
-    return koreanTime;
-}
-
 // API 라우트 설정
 app.post('/api/sendMemberData', async (req, res) => {
     const { member_id, phone, name } = req.body;
-    const currentTime = getKoreanTime();  // 한국 시간으로 현재 시간 가져오기
+    const currentTime = new Date();  // 현재 시간 (UTC 기준)
 
     try {
         const db = await connectToDatabase();
@@ -59,7 +51,7 @@ app.post('/api/sendMemberData', async (req, res) => {
             member_id,
             phone,
             name,
-            participation_time: currentTime  // 한국 시간으로 참여 시각 저장
+            participation_time: currentTime  // UTC 시간으로 참여 시각 저장
         });
         res.status(200).json({ message: '회원 정보가 성공적으로 저장되었습니다.' });
     } catch (error) {
@@ -82,7 +74,6 @@ app.get('/api/getParticipantData', async (req, res) => {
         res.status(500).json({ message: '서버 오류가 발생했습니다.' });
     }
 });
-
 
 // 서버 시작
 const port = process.env.PORT || 4000;
