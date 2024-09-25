@@ -32,7 +32,7 @@ const Member = mongoose.model('Member', memberSchema);
 app.use(bodyParser.json());
 
 // 회원 정보를 MongoDB에 저장하는 API
-app.post('/api/sendMemberData', async (req, res) => {
+app.post('/sendMemberData', async (req, res) => {
     const { member_id } = req.body;
     try {
         // 회원 정보 저장 로직
