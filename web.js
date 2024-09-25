@@ -68,6 +68,22 @@ app.post('/api/sendMemberData', async (req, res) => {
     }
 });
 
+app.get('/api/getParticipantData', async (req, res) => {
+    try {
+        const db = await connectToDatabase();
+        const collection = db.collection('members');
+        
+        // MongoDB에서 모든 참여자 데이터를 가져옴
+        const participants = await collection.find({}).toArray();
+
+        res.status(200).json(participants);
+    } catch (error) {
+        console.error('데이터 조회 중 오류 발생:', error);
+        res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+    }
+});
+
+
 // 서버 시작
 const port = process.env.PORT || 4000;
 app.listen(port, () => {
