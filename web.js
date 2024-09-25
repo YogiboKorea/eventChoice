@@ -30,14 +30,22 @@ async function connectToDatabase() {
     }
 }
 
+// 한국 시간(KST)을 가져오는 함수
+function getKoreanTime() {
+    const now = new Date();
+    const utcOffset = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const koreanTime = new Date(utcOffset + (9 * 60 * 60000));  // UTC+9 시간 추가
+    return koreanTime;
+}
+
 // API 라우트 설정
 app.post('/api/sendMemberData', async (req, res) => {
-    const { member_id, phone, name } = req.body;  // member_id, phone, name을 받음
-    const currentTime = new Date();  // 현재 시각 추가
+    const { member_id, phone, name } = req.body;
+    const currentTime = getKoreanTime();  // 한국 시간으로 현재 시간 가져오기
 
     try {
         const db = await connectToDatabase();
-        const collection = db.collection('members');  // 'members' 컬렉션 사용
+        const collection = db.collection('members');
 
         // 회원 중복 확인
         const existingMember = await collection.findOne({ member_id });
@@ -47,11 +55,11 @@ app.post('/api/sendMemberData', async (req, res) => {
         }
 
         // 새 회원 정보 저장 (member_id, phone, name, 참여 시각)
-        await collection.insertOne({ 
-            member_id, 
-            phone, 
-            name, 
-            participation_time: currentTime  // 참여 시각 저장
+        await collection.insertOne({
+            member_id,
+            phone,
+            name,
+            participation_time: currentTime  // 한국 시간으로 참여 시각 저장
         });
         res.status(200).json({ message: '회원 정보가 성공적으로 저장되었습니다.' });
     } catch (error) {
