@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const cors = require('cors');
+app.use(cors());
 const dotenv = require('dotenv');
 
 // 환경 변수 설정
@@ -32,16 +34,13 @@ app.use(bodyParser.json());
 // 회원 정보를 MongoDB에 저장하는 API
 app.post('/api/sendMemberData', async (req, res) => {
     const { member_id } = req.body;
-
     try {
-        // 이미 해당 member_id가 존재하는지 확인
+        // 회원 정보 저장 로직
         const existingMember = await Member.findOne({ member_id });
-
         if (existingMember) {
             return res.status(400).json({ message: '이미 참여한 회원입니다.' });
         }
 
-        // 새 회원 정보 저장
         const newMember = new Member({ member_id });
         await newMember.save();
 
