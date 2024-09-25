@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const { MongoClient } = require('mongodb');
 const dotenv = require('dotenv');
 
 // 환경 변수 설정
@@ -10,35 +10,43 @@ dotenv.config();
 // Express 앱 초기화
 const app = express();
 
-// 미들웨어 설정 (app 초기화 이후)
+// 미들웨어 설정
 app.use(cors());
 app.use(bodyParser.json());
 
-// MongoDB 연결
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(() => {
-    console.log('MongoDB에 성공적으로 연결되었습니다.');
-}).catch(err => {
-    console.error('MongoDB 연결 오류:', err);
-});
+// MongoDB 연결 설정
+const uri = process.env.MONGO_URI;
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+// MongoDB 연결 및 데이터베이스 가져오기
+async function connectToDatabase() {
+    try {
+        await client.connect();
+        console.log('MongoDB에 성공적으로 연결되었습니다.');
+        return client.db('members');  // 'members' 데이터베이스 선택 (없으면 자동 생성)
+    } catch (error) {
+        console.error('MongoDB 연결 오류:', error);
+        throw error;
+    }
+}
 
 // API 라우트 설정
 app.post('/api/sendMemberData', async (req, res) => {
     const { member_id } = req.body;
+
     try {
+        const db = await connectToDatabase();
+        const collection = db.collection('members');  // 'members' 컬렉션 사용
+
         // 회원 중복 확인
-        const existingMember = await Member.findOne({ member_id });
+        const existingMember = await collection.findOne({ member_id });
 
         if (existingMember) {
             return res.status(400).json({ message: '이미 참여한 회원입니다.' });
         }
 
         // 새 회원 정보 저장
-        const newMember = new Member({ member_id });
-        await newMember.save();
-
+        await collection.insertOne({ member_id });
         res.status(200).json({ message: '회원 정보가 성공적으로 저장되었습니다.' });
     } catch (error) {
         console.error('저장 중 오류 발생:', error);
