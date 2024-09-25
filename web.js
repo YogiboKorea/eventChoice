@@ -1,18 +1,21 @@
 const express = require('express');
+const cors = require('cors');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const cors = require('cors');
-app.use(cors());
 const dotenv = require('dotenv');
 
 // 환경 변수 설정
 dotenv.config();
 
+// Express 앱 초기화
 const app = express();
-const port = process.env.PORT || 4000; // .env 파일에서 포트 가져오기
+
+// 미들웨어 설정 (app 초기화 이후)
+app.use(cors());
+app.use(bodyParser.json());
 
 // MongoDB 연결
-mongoose.connect(process.env.MONGO_URI, { // .env 파일에서 MongoDB URI 가져오기
+mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(() => {
@@ -21,26 +24,18 @@ mongoose.connect(process.env.MONGO_URI, { // .env 파일에서 MongoDB URI 가�
     console.error('MongoDB 연결 오류:', err);
 });
 
-// MongoDB 스키마 및 모델 정의
-const memberSchema = new mongoose.Schema({
-    member_id: { type: String, required: true }
-});
-
-const Member = mongoose.model('Member', memberSchema);
-
-// Body-parser 미들웨어 설정
-app.use(bodyParser.json());
-
-// 회원 정보를 MongoDB에 저장하는 API
-app.post('/sendMemberData', async (req, res) => {
+// API 라우트 설정
+app.post('/api/sendMemberData', async (req, res) => {
     const { member_id } = req.body;
     try {
-        // 회원 정보 저장 로직
+        // 회원 중복 확인
         const existingMember = await Member.findOne({ member_id });
+
         if (existingMember) {
             return res.status(400).json({ message: '이미 참여한 회원입니다.' });
         }
 
+        // 새 회원 정보 저장
         const newMember = new Member({ member_id });
         await newMember.save();
 
@@ -51,7 +46,8 @@ app.post('/sendMemberData', async (req, res) => {
     }
 });
 
-// 서버 실행
+// 서버 시작
+const port = process.env.PORT || 4000;
 app.listen(port, () => {
     console.log(`서버가 http://localhost:${port} 에서 실행 중입니다.`);
 });
