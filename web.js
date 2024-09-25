@@ -1,64 +1,58 @@
 const express = require('express');
-const app = express();
-const cors = require('cors');
-app.use(cors());
+const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const MongoClient = require('mongodb').MongoClient;
-require('dotenv').config();  // .env 파일 불러오기
+const dotenv = require('dotenv');
 
-app.use(bodyParser.json());
-const PORT = 4000;
-const mongoUri = process.env.MONGODB_URI;  // .env 파일의 MONGODB_URI 사용
-MongoClient.connect(mongoUri, function (err, client) {
-    if (err) {
-        console.error('Failed to connect to MongoDB:', err);
-        app.use((req, res) => {
-            res.status(500).json({ error: 'Failed to connect to the database' });
-        });
-        return;
-    }
+// 환경 변수 설정
+dotenv.config();
 
-    const db = client.db('eventDB');
-    const collection = db.collection('participants');
+const app = express();
+const port = process.env.PORT || 4000; // .env 파일에서 포트 가져오기
 
-    console.log('Connected to MongoDB');
-
-    // API: 회원 참여 여부 확인
-    app.post('/checkParticipation', function (req, res) {
-        const memberId = req.body.memberId;
-
-        if (!memberId) {
-            res.status(400).json({ error: 'memberId is required' });
-            return;
-        }
-
-        // MongoDB에서 회원 ID 검색
-        collection.findOne({ memberId: memberId }, function (err, result) {
-            if (err) {
-                res.status(500).json({ error: 'Database error' });
-                return;
-            }
-
-            if (result) {
-                // 중복 참여
-                res.json({ isDuplicate: true, message: '이미 참여하셨습니다.' });
-            } else {
-                // 신규 참여자, 데이터 저장
-                collection.insertOne({ memberId: memberId }, function (err, result) {
-                    if (err) {
-                        res.status(500).json({ error: 'Failed to save data' });
-                        return;
-                    }
-                    res.json({ isDuplicate: false, message: '참여가 완료되었습니다.' });
-                });
-            }
-        });
-    });
+// MongoDB 연결
+mongoose.connect(process.env.MONGO_URI, { // .env 파일에서 MongoDB URI 가져오기
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    console.log('MongoDB에 성공적으로 연결되었습니다.');
+}).catch(err => {
+    console.error('MongoDB 연결 오류:', err);
 });
 
+// MongoDB 스키마 및 모델 정의
+const memberSchema = new mongoose.Schema({
+    member_id: { type: String, required: true }
+});
 
+const Member = mongoose.model('Member', memberSchema);
 
-// MongoDB 연결 성공 시 서버 실행
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// Body-parser 미들웨어 설정
+app.use(bodyParser.json());
+
+// 회원 정보를 MongoDB에 저장하는 API
+app.post('/api/sendMemberData', async (req, res) => {
+    const { member_id } = req.body;
+
+    try {
+        // 이미 해당 member_id가 존재하는지 확인
+        const existingMember = await Member.findOne({ member_id });
+
+        if (existingMember) {
+            return res.status(400).json({ message: '이미 참여한 회원입니다.' });
+        }
+
+        // 새 회원 정보 저장
+        const newMember = new Member({ member_id });
+        await newMember.save();
+
+        res.status(200).json({ message: '회원 정보가 성공적으로 저장되었습니다.' });
+    } catch (error) {
+        console.error('저장 중 오류 발생:', error);
+        res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+    }
+});
+
+// 서버 실행
+app.listen(port, () => {
+    console.log(`서버가 http://localhost:${port} 에서 실행 중입니다.`);
 });

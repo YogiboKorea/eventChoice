@@ -1,11 +1,64 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>이벤트 참여</title>
 </head>
 <body>
-    
+
+    <h1>이벤트 참여 페이지</h1>
+
+    <button class="event_button">이벤트 참여 버튼</button>
+    <p id="message"></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script language="javascript" type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            getCustomerId();
+        });
+
+        let memberId = null;
+
+        // 회원 정보를 가져오는 함수
+        function getCustomerId() {
+            // 여기에 실제 API 호출로 회원 정보를 가져오는 코드가 들어가야 합니다.
+            // 예시로 임시 memberId 설정
+            memberId = 'test123';
+            console.log('회원아이디 확인:', memberId);
+        }
+
+        // 이벤트 참여 버튼 클릭 시 동작
+        document.querySelector('.event_button').addEventListener('click', function() {
+            if (!memberId) {
+                document.getElementById('message').textContent = '회원 정보를 가져오는 중입니다. 잠시 후 다시 시도하세요.';
+                return;
+            }
+
+            // 서버에 데이터를 전송하는 함수 호출
+            checkParticipation(memberId);
+        });
+
+        // 서버에 memberId를 전송해 중복 참여 여부를 확인하는 함수
+        function checkParticipation(memberId) {
+            console.log('Sending memberId:', memberId);
+
+            axios.post('http://localhost:4000/checkParticipation', {
+                memberId: memberId
+            })
+            .then(response => {
+                if (response.data.isDuplicate) {
+                    document.getElementById('message').textContent = '이미 참여하셨습니다.';
+                } else {
+                    document.getElementById('message').textContent = '참여가 완료되었습니다.';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('message').textContent = '참여 처리 중 오류가 발생했습니다.';
+            });
+        }
+    </script>
+
 </body>
 </html>
