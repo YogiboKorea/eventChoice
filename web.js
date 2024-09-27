@@ -75,6 +75,27 @@ app.get('/api/getParticipantData', async (req, res) => {
     }
 });
 
+app.post('/api/checkParticipation', async (req, res) => {
+    const { member_id } = req.body;
+
+    try {
+        const db = await connectToDatabase();
+        const collection = db.collection('members');
+
+        // 회원 참여 여부 확인
+        const existingMember = await collection.findOne({ member_id });
+
+        if (existingMember) {
+            return res.status(200).json({ participated: true });
+        } else {
+            return res.status(200).json({ participated: false });
+        }
+    } catch (error) {
+        console.error('참여 확인 중 오류 발생:', error);
+        res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+    }
+});
+
 // 서버 시작
 const port = process.env.PORT || 4000;
 app.listen(port, () => {
